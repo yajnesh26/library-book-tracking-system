@@ -1,0 +1,3 @@
+500,dark,someone,series,4,4
+750,breaking bad,vecna,chemistry,6,6
+1001,stranger things,duffer,series,5,5
