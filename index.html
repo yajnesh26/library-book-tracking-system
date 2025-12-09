@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Library Book Linked List Visualization</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .description {
+      text-align: center;
+      font-size: 14px;
+      margin-bottom: 20px;
+      color: #9ca3af;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .controls label {
+      font-size: 14px;
+    }
+
+    input[type="file"] {
+      padding: 5px;
+    }
+
+    .visualizer-container {
+      background: #020617;
+      border-radius: 12px;
+      padding: 16px;
+      min-height: 150px;
+      border: 1px solid #1f2937;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .list-info {
+      font-size: 13px;
+      margin-bottom: 8px;
+      color: #9ca3af;
+    }
+
+    .nodes-wrapper {
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .book-node {
+      background: #1f2937;
+      border-radius: 10px;
+      padding: 10px 12px;
+      min-width: 160px;
+      max-width: 200px;
+      margin: 5px 0;
+      box-shadow: 0 0 0 1px #374151;
+      font-size: 12px;
+    }
+
+    .book-node-header {
+      font-weight: bold;
+      margin-bottom: 4px;
+      color: #facc15;
+    }
+
+    .book-field {
+      margin: 2px 0;
+    }
+
+    .arrow {
+      font-size: 20px;
+      margin: 0 8px;
+      color: #38bdf8;
+    }
+
+    .null-node {
+      font-style: italic;
+      color: #f97316;
+      margin-left: 8px;
+      font-size: 14px;
+    }
+
+    .error-message {
+      color: #f97316;
+      font-size: 13px;
+      text-align: center;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Library Book Linked List Visualization</h1>
+  <p class="description">
+    Export books from your C program (option 7 → <strong>books.txt</strong>) and load the file here to visualize the linked list.
+  </p>
+
+  <div class="controls">
+    <label for="fileInput">Choose <strong>books.txt</strong> file:</label>
+    <input type="file" id="fileInput" accept=".txt,.csv" />
+  </div>
+
+  <div id="error" class="error-message"></div>
+
+  <div class="visualizer-container">
+    <div class="list-info" id="listInfo">No data loaded. List is empty (head = NULL).</div>
+    <div class="nodes-wrapper" id="nodesWrapper">
+      <!-- Nodes will be inserted here by JavaScript -->
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const nodesWrapper = document.getElementById('nodesWrapper');
+    const listInfo = document.getElementById('listInfo');
+    const errorDiv = document.getElementById('error');
+
+    // When user selects a file (books.txt)
+    fileInput.addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        const text = e.target.result;
+        try {
+          const books = parseBooksFile(text);
+          renderLinkedList(books);
+          errorDiv.textContent = '';
+        } catch (err) {
+          errorDiv.textContent = 'Error reading file: ' + err.message;
+          nodesWrapper.innerHTML = '';
+          listInfo.textContent = 'Could not load linked list.';
+        }
+      };
+
+      reader.onerror = function() {
+        errorDiv.textContent = 'Failed to read file.';
+      };
+
+      reader.readAsText(file);
+    });
+
+    // Parse the CSV-like content from books.txt
+    // Format per line: ID,Title,Author,Category,Available,Total
+    function parseBooksFile(text) {
+      const lines = text.split('\n');
+      const books = [];
+
+      for (let line of lines) {
+        line = line.trim();
+        if (line === '') continue; // skip empty line
+
+        const parts = line.split(',');
+
+        if (parts.length < 6) {
+          throw new Error('Invalid line format: "' + line + '"');
+        }
+
+        const book = {
+          id: parseInt(parts[0]),
+          title: parts[1],
+          author: parts[2],
+          category: parts[3],
+          available: parseInt(parts[4]),
+          total: parseInt(parts[5])
+        };
+
+        books.push(book);
+      }
+
+      // Already sorted by bookID from C, but just in case:
+      books.sort((a, b) => a.id - b.id);
+      return books;
+    }
+
+    // Render linked list visually
+    function renderLinkedList(books) {
+      nodesWrapper.innerHTML = '';
+
+      if (!books || books.length === 0) {
+        listInfo.textContent = 'List is empty. (head = NULL)';
+        const nullSpan = document.createElement('span');
+        nullSpan.className = 'null-node';
+        nullSpan.textContent = 'NULL';
+        nodesWrapper.appendChild(nullSpan);
+        return;
+      }
+
+      listInfo.textContent = 'head →';
+
+      books.forEach((book, index) => {
+        // Create node
+        const nodeDiv = document.createElement('div');
+        nodeDiv.className = 'book-node';
+
+        const header = document.createElement('div');
+        header.className = 'book-node-header';
+        header.textContent = `ID: ${book.id}`;
+        nodeDiv.appendChild(header);
+
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'book-field';
+        titleDiv.textContent = `Title: ${book.title}`;
+        nodeDiv.appendChild(titleDiv);
+
+        const authorDiv = document.createElement('div');
+        authorDiv.className = 'book-field';
+        authorDiv.textContent = `Author: ${book.author}`;
+        nodeDiv.appendChild(authorDiv);
+
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'book-field';
+        categoryDiv.textContent = `Category: ${book.category}`;
+        nodeDiv.appendChild(categoryDiv);
+
+        const copiesDiv = document.createElement('div');
+        copiesDiv.className = 'book-field';
+        copiesDiv.textContent = `Avail/Total: ${book.available}/${book.total}`;
+        nodeDiv.appendChild(copiesDiv);
+
+        // Append node
+        nodesWrapper.appendChild(nodeDiv);
+
+        // Add arrow if not the last node
+        if (index !== books.length - 1) {
+          const arrowSpan = document.createElement('span');
+          arrowSpan.className = 'arrow';
+          arrowSpan.textContent = '→';
+          nodesWrapper.appendChild(arrowSpan);
+        }
+      });
+
+      // Add NULL at the end
+      const nullSpan = document.createElement('span');
+      nullSpan.className = 'null-node';
+      nullSpan.textContent = '→ NULL';
+      nodesWrapper.appendChild(nullSpan);
+    }
+
+    // Initial state: show empty list
+    renderLinkedList([]);
+  </script>
+
+</body>
+</html>
