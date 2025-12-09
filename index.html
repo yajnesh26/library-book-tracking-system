@@ -29,7 +29,7 @@
       justify-content: center;
       align-items: center;
       gap: 10px;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
       flex-wrap: wrap;
     }
 
@@ -37,8 +37,32 @@
       font-size: 14px;
     }
 
-    input[type="file"] {
-      padding: 5px;
+    input[type="file"],
+    input[type="number"],
+    button {
+      padding: 5px 8px;
+      border-radius: 6px;
+      border: 1px solid #4b5563;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 13px;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #111827;
+    }
+
+    .search-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
     }
 
     .visualizer-container {
@@ -71,6 +95,7 @@
       margin: 5px 0;
       box-shadow: 0 0 0 1px #374151;
       font-size: 12px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
     }
 
     .book-node-header {
@@ -102,6 +127,39 @@
       text-align: center;
       margin-top: 8px;
     }
+
+    /* New: highlight searched node */
+    .highlight {
+      box-shadow: 0 0 0 2px #22c55e, 0 0 12px rgba(34, 197, 94, 0.8);
+      transform: scale(1.03);
+    }
+
+    /* New: out of stock visual */
+    .out-of-stock {
+      background: #450a0a;
+      box-shadow: 0 0 0 1px #b91c1c;
+    }
+
+    .legend {
+      text-align: center;
+      font-size: 12px;
+      margin-top: 8px;
+      color: #9ca3af;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin: 0 8px;
+    }
+
+    .legend-box {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      display: inline-block;
+    }
   </style>
 </head>
 <body>
@@ -116,6 +174,13 @@
     <input type="file" id="fileInput" accept=".txt,.csv" />
   </div>
 
+  <!-- New: Search / Highlight controls -->
+  <div class="search-controls">
+    <label for="searchId">Enter Book ID to highlight:</label>
+    <input type="number" id="searchId" placeholder="e.g., 101" />
+    <button id="highlightBtn">Highlight Book</button>
+  </div>
+
   <div id="error" class="error-message"></div>
 
   <div class="visualizer-container">
@@ -125,11 +190,31 @@
     </div>
   </div>
 
+  <div class="legend">
+    <span>
+      <span class="legend-box" style="background:#1f2937; box-shadow:0 0 0 1px #374151;"></span>
+      Normal book
+    </span>
+    <span>
+      <span class="legend-box" style="background:#450a0a; box-shadow:0 0 0 1px #b91c1c;"></span>
+      Out of stock (0 available)
+    </span>
+    <span>
+      <span class="legend-box" style="background:#1f2937; box-shadow:0 0 0 2px #22c55e;"></span>
+      Highlighted search result
+    </span>
+  </div>
+
   <script>
     const fileInput = document.getElementById('fileInput');
     const nodesWrapper = document.getElementById('nodesWrapper');
     const listInfo = document.getElementById('listInfo');
     const errorDiv = document.getElementById('error');
+    const searchIdInput = document.getElementById('searchId');
+    const highlightBtn = document.getElementById('highlightBtn');
+
+    // store last loaded books globally so we can search them
+    let currentBooks = [];
 
     // When user selects a file (books.txt)
     fileInput.addEventListener('change', function(event) {
@@ -142,12 +227,14 @@
         const text = e.target.result;
         try {
           const books = parseBooksFile(text);
+          currentBooks = books; // update global
           renderLinkedList(books);
           errorDiv.textContent = '';
         } catch (err) {
           errorDiv.textContent = 'Error reading file: ' + err.message;
           nodesWrapper.innerHTML = '';
           listInfo.textContent = 'Could not load linked list.';
+          currentBooks = [];
         }
       };
 
@@ -211,6 +298,14 @@
         const nodeDiv = document.createElement('div');
         nodeDiv.className = 'book-node';
 
+        // Mark out-of-stock nodes visually
+        if (book.available === 0) {
+          nodeDiv.classList.add('out-of-stock');
+        }
+
+        // Attach data-id for search highlighting
+        nodeDiv.dataset.bookId = book.id;
+
         const header = document.createElement('div');
         header.className = 'book-node-header';
         header.textContent = `ID: ${book.id}`;
@@ -254,6 +349,50 @@
       nullSpan.textContent = '→ NULL';
       nodesWrapper.appendChild(nullSpan);
     }
+
+    // Highlight selected book node based on entered ID
+    function highlightBookById(id) {
+      // Remove old highlights
+      const allNodes = nodesWrapper.querySelectorAll('.book-node');
+      allNodes.forEach(node => node.classList.remove('highlight'));
+
+      if (!id || isNaN(id)) {
+        errorDiv.textContent = 'Please enter a valid Book ID.';
+        return;
+      }
+
+      // find matching node
+      let found = false;
+      allNodes.forEach(node => {
+        if (parseInt(node.dataset.bookId) === id) {
+          node.classList.add('highlight');
+          found = true;
+
+          // scroll into view horizontally
+          node.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
+      });
+
+      if (!found) {
+        errorDiv.textContent = `Book with ID ${id} not found in current list.`;
+      } else {
+        errorDiv.textContent = '';
+      }
+    }
+
+    // When highlight button is clicked
+    highlightBtn.addEventListener('click', () => {
+      const id = parseInt(searchIdInput.value);
+      highlightBookById(id);
+    });
+
+    // Also allow pressing Enter in the input
+    searchIdInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const id = parseInt(searchIdInput.value);
+        highlightBookById(id);
+      }
+    });
 
     // Initial state: show empty list
     renderLinkedList([]);
