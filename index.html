@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Library Book Linked List Visualization</title>
   <style>
     body {
@@ -24,55 +24,84 @@
       color: #9ca3af;
     }
 
-    .controls {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 10px;
+    .layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 800px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: #020617;
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid #1f2937;
+    }
+
+    .panel-title {
+      font-size: 16px;
       margin-bottom: 10px;
-      flex-wrap: wrap;
+      font-weight: bold;
     }
 
-    .controls label {
-      font-size: 14px;
+    .form-group {
+      margin-bottom: 10px;
     }
 
-    input[type="file"],
+    label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 3px;
+    }
+
     input[type="number"],
-    button {
-      padding: 5px 8px;
+    input[type="text"] {
+      width: 100%;
+      padding: 6px 8px;
       border-radius: 6px;
       border: 1px solid #4b5563;
       background: #020617;
       color: #e5e7eb;
       font-size: 13px;
+      box-sizing: border-box;
     }
 
-    button {
+    .btn {
+      display: inline-block;
+      padding: 6px 10px;
+      margin-top: 4px;
+      border-radius: 6px;
+      border: 1px solid #4b5563;
+      background: #111827;
+      color: #e5e7eb;
+      font-size: 13px;
       cursor: pointer;
     }
 
-    button:hover {
-      background: #111827;
+    .btn:hover {
+      background: #1f2937;
     }
 
-    .search-controls {
+    .btn-row {
       display: flex;
-      justify-content: center;
-      align-items: center;
       gap: 8px;
-      margin-bottom: 20px;
       flex-wrap: wrap;
+      margin-top: 4px;
     }
 
     .visualizer-container {
-      background: #020617;
       border-radius: 12px;
       padding: 16px;
       min-height: 150px;
       border: 1px solid #1f2937;
       overflow-x: auto;
       white-space: nowrap;
+      background: #020617;
     }
 
     .list-info {
@@ -124,24 +153,26 @@
     .error-message {
       color: #f97316;
       font-size: 13px;
-      text-align: center;
       margin-top: 8px;
     }
 
-    /* New: highlight searched node */
+    .success-message {
+      color: #22c55e;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
     .highlight {
-      box-shadow: 0 0 0 2px #22c55e, 0 0 12px rgba(34, 197, 94, 0.8);
+      box-shadow: 0 0 0 2px #22c55e, 0 0 12px rgba(34, 197, 94, 0.7);
       transform: scale(1.03);
     }
 
-    /* New: out of stock visual */
     .out-of-stock {
       background: #450a0a;
       box-shadow: 0 0 0 1px #b91c1c;
     }
 
     .legend {
-      text-align: center;
       font-size: 12px;
       margin-top: 8px;
       color: #9ca3af;
@@ -151,7 +182,7 @@
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      margin: 0 8px;
+      margin: 0 8px 4px 0;
     }
 
     .legend-box {
@@ -163,122 +194,134 @@
   </style>
 </head>
 <body>
-
   <h1>Library Book Linked List Visualization</h1>
   <p class="description">
-    Export books from your C program (option 7 → <strong>books.txt</strong>) and load the file here to visualize the linked list.
+    All operations are handled by a C backend (linked list) via a Node.js server.
   </p>
 
-  <div class="controls">
-    <label for="fileInput">Choose <strong>books.txt</strong> file:</label>
-    <input type="file" id="fileInput" accept=".txt,.csv" />
-  </div>
+  <div class="layout">
+    <!-- LEFT: Controls -->
+    <div class="panel">
+      <div class="panel-title">Operations</div>
 
-  <!-- New: Search / Highlight controls -->
-  <div class="search-controls">
-    <label for="searchId">Enter Book ID to highlight:</label>
-    <input type="number" id="searchId" placeholder="e.g., 101" />
-    <button id="highlightBtn">Highlight Book</button>
-  </div>
+      <!-- Add book form -->
+      <form id="addForm">
+        <div class="form-group">
+          <label for="addId">Book ID</label>
+          <input type="number" id="addId" required />
+        </div>
+        <div class="form-group">
+          <label for="addTitle">Title</label>
+          <input type="text" id="addTitle" required />
+        </div>
+        <div class="form-group">
+          <label for="addAuthor">Author</label>
+          <input type="text" id="addAuthor" required />
+        </div>
+        <div class="form-group">
+          <label for="addCategory">Category</label>
+          <input type="text" id="addCategory" required />
+        </div>
+        <div class="form-group">
+          <label for="addTotal">Total Copies</label>
+          <input type="number" id="addTotal" required />
+        </div>
+        <button class="btn" type="submit">Add Book</button>
+      </form>
 
-  <div id="error" class="error-message"></div>
+      <hr style="border-color:#1f2937; margin: 14px 0;" />
 
-  <div class="visualizer-container">
-    <div class="list-info" id="listInfo">No data loaded. List is empty (head = NULL).</div>
-    <div class="nodes-wrapper" id="nodesWrapper">
-      <!-- Nodes will be inserted here by JavaScript -->
+      <!-- Issue / Return / Delete / Highlight -->
+      <div class="form-group">
+        <label for="bookIdAction">Book ID for issue / return / delete / highlight</label>
+        <input type="number" id="bookIdAction" />
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="issueBtn" type="button">Issue</button>
+        <button class="btn" id="returnBtn" type="button">Return</button>
+        <button class="btn" id="deleteBtn" type="button">Delete</button>
+        <button class="btn" id="highlightBtn" type="button">Highlight</button>
+        <button class="btn" id="refreshBtn" type="button">Refresh</button>
+      </div>
+
+      <div id="message" class="success-message"></div>
+      <div id="error" class="error-message"></div>
+    </div>
+
+    <!-- RIGHT: Visualization -->
+    <div>
+      <div class="visualizer-container">
+        <div class="list-info" id="listInfo">Loading list from server...</div>
+        <div class="nodes-wrapper" id="nodesWrapper"></div>
+      </div>
+
+      <div class="legend">
+        <span>
+          <span class="legend-box" style="background:#1f2937; box-shadow:0 0 0 1px #374151;"></span>
+          Normal book
+        </span>
+        <span>
+          <span class="legend-box" style="background:#450a0a; box-shadow:0 0 0 1px #b91c1c;"></span>
+          Out of stock (0 available)
+        </span>
+        <span>
+          <span class="legend-box" style="background:#1f2937; box-shadow:0 0 0 2px #22c55e;"></span>
+          Highlighted
+        </span>
+      </div>
     </div>
   </div>
 
-  <div class="legend">
-    <span>
-      <span class="legend-box" style="background:#1f2937; box-shadow:0 0 0 1px #374151;"></span>
-      Normal book
-    </span>
-    <span>
-      <span class="legend-box" style="background:#450a0a; box-shadow:0 0 0 1px #b91c1c;"></span>
-      Out of stock (0 available)
-    </span>
-    <span>
-      <span class="legend-box" style="background:#1f2937; box-shadow:0 0 0 2px #22c55e;"></span>
-      Highlighted search result
-    </span>
-  </div>
-
   <script>
-    const fileInput = document.getElementById('fileInput');
+    const API_BASE = 'http://localhost:3000/api';
+
     const nodesWrapper = document.getElementById('nodesWrapper');
     const listInfo = document.getElementById('listInfo');
     const errorDiv = document.getElementById('error');
-    const searchIdInput = document.getElementById('searchId');
-    const highlightBtn = document.getElementById('highlightBtn');
+    const messageDiv = document.getElementById('message');
 
-    // store last loaded books globally so we can search them
+    const addForm = document.getElementById('addForm');
+    const addId = document.getElementById('addId');
+    const addTitle = document.getElementById('addTitle');
+    const addAuthor = document.getElementById('addAuthor');
+    const addCategory = document.getElementById('addCategory');
+    const addTotal = document.getElementById('addTotal');
+
+    const bookIdAction = document.getElementById('bookIdAction');
+    const issueBtn = document.getElementById('issueBtn');
+    const returnBtn = document.getElementById('returnBtn');
+    const deleteBtn = document.getElementById('deleteBtn');
+    const highlightBtn = document.getElementById('highlightBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+
     let currentBooks = [];
 
-    // When user selects a file (books.txt)
-    fileInput.addEventListener('change', function(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-
-      reader.onload = function(e) {
-        const text = e.target.result;
-        try {
-          const books = parseBooksFile(text);
-          currentBooks = books; // update global
-          renderLinkedList(books);
-          errorDiv.textContent = '';
-        } catch (err) {
-          errorDiv.textContent = 'Error reading file: ' + err.message;
-          nodesWrapper.innerHTML = '';
-          listInfo.textContent = 'Could not load linked list.';
-          currentBooks = [];
-        }
-      };
-
-      reader.onerror = function() {
-        errorDiv.textContent = 'Failed to read file.';
-      };
-
-      reader.readAsText(file);
-    });
-
-    // Parse the CSV-like content from books.txt
-    // Format per line: ID,Title,Author,Category,Available,Total
-    function parseBooksFile(text) {
-      const lines = text.split('\n');
-      const books = [];
-
-      for (let line of lines) {
-        line = line.trim();
-        if (line === '') continue; // skip empty line
-
-        const parts = line.split(',');
-
-        if (parts.length < 6) {
-          throw new Error('Invalid line format: "' + line + '"');
-        }
-
-        const book = {
-          id: parseInt(parts[0]),
-          title: parts[1],
-          author: parts[2],
-          category: parts[3],
-          available: parseInt(parts[4]),
-          total: parseInt(parts[5])
-        };
-
-        books.push(book);
-      }
-
-      // Already sorted by bookID from C, but just in case:
-      books.sort((a, b) => a.id - b.id);
-      return books;
+    function setMessage(msg) {
+      messageDiv.textContent = msg || '';
     }
 
-    // Render linked list visually
+    function setError(msg) {
+      errorDiv.textContent = msg || '';
+    }
+
+    // Fetch books from server
+    async function loadBooks() {
+      try {
+        setError('');
+        setMessage('Fetching latest list from server...');
+        const res = await fetch(`${API_BASE}/books`);
+        const data = await res.json();
+        currentBooks = data;
+        renderLinkedList(data);
+        setMessage('List updated from backend.');
+      } catch (err) {
+        console.error(err);
+        setError('Failed to load books from server.');
+        listInfo.textContent = 'Error loading list.';
+      }
+    }
+
+    // Render linked list
     function renderLinkedList(books) {
       nodesWrapper.innerHTML = '';
 
@@ -294,16 +337,9 @@
       listInfo.textContent = 'head →';
 
       books.forEach((book, index) => {
-        // Create node
         const nodeDiv = document.createElement('div');
         nodeDiv.className = 'book-node';
-
-        // Mark out-of-stock nodes visually
-        if (book.available === 0) {
-          nodeDiv.classList.add('out-of-stock');
-        }
-
-        // Attach data-id for search highlighting
+        if (book.available === 0) nodeDiv.classList.add('out-of-stock');
         nodeDiv.dataset.bookId = book.id;
 
         const header = document.createElement('div');
@@ -331,10 +367,8 @@
         copiesDiv.textContent = `Avail/Total: ${book.available}/${book.total}`;
         nodeDiv.appendChild(copiesDiv);
 
-        // Append node
         nodesWrapper.appendChild(nodeDiv);
 
-        // Add arrow if not the last node
         if (index !== books.length - 1) {
           const arrowSpan = document.createElement('span');
           arrowSpan.className = 'arrow';
@@ -343,60 +377,139 @@
         }
       });
 
-      // Add NULL at the end
       const nullSpan = document.createElement('span');
       nullSpan.className = 'null-node';
       nullSpan.textContent = '→ NULL';
       nodesWrapper.appendChild(nullSpan);
     }
 
-    // Highlight selected book node based on entered ID
     function highlightBookById(id) {
-      // Remove old highlights
       const allNodes = nodesWrapper.querySelectorAll('.book-node');
       allNodes.forEach(node => node.classList.remove('highlight'));
 
       if (!id || isNaN(id)) {
-        errorDiv.textContent = 'Please enter a valid Book ID.';
+        setError('Enter a valid Book ID to highlight.');
         return;
       }
 
-      // find matching node
       let found = false;
       allNodes.forEach(node => {
         if (parseInt(node.dataset.bookId) === id) {
           node.classList.add('highlight');
-          found = true;
-
-          // scroll into view horizontally
           node.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+          found = true;
         }
       });
 
       if (!found) {
-        errorDiv.textContent = `Book with ID ${id} not found in current list.`;
+        setError(`Book with ID ${id} not found in current list.`);
       } else {
-        errorDiv.textContent = '';
+        setError('');
+        setMessage(`Highlighted book with ID ${id}.`);
       }
     }
 
-    // When highlight button is clicked
-    highlightBtn.addEventListener('click', () => {
-      const id = parseInt(searchIdInput.value);
-      highlightBookById(id);
-    });
+    // Add book (POST /api/books)
+    addForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        setError('');
+        setMessage('Adding book via backend...');
 
-    // Also allow pressing Enter in the input
-    searchIdInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        const id = parseInt(searchIdInput.value);
-        highlightBookById(id);
+        const body = {
+          id: parseInt(addId.value),
+          title: addTitle.value,
+          author: addAuthor.value,
+          category: addCategory.value,
+          totalCopies: parseInt(addTotal.value),
+        };
+
+        const res = await fetch(`${API_BASE}/books`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || 'Failed to add book');
+        }
+
+        const data = await res.json();
+        currentBooks = data;
+        renderLinkedList(data);
+        setMessage('Book added successfully.');
+        addForm.reset();
+      } catch (err) {
+        console.error(err);
+        setError(err.message || 'Failed to add book.');
       }
     });
 
-    // Initial state: show empty list
-    renderLinkedList([]);
-  </script>
+    // Issue / Return / Delete / Highlight handlers
+    issueBtn.addEventListener('click', async () => {
+      const id = parseInt(bookIdAction.value);
+      if (!id) return setError('Enter a valid Book ID for issue.');
+      try {
+        setError('');
+        setMessage('Issuing book...');
+        const res = await fetch(`${API_BASE}/books/${id}/issue`, { method: 'POST' });
+        if (!res.ok) throw new Error('Failed to issue book.');
+        const data = await res.json();
+        currentBooks = data;
+        renderLinkedList(data);
+        setMessage(`Issue operation performed for ID ${id}.`);
+      } catch (err) {
+        console.error(err);
+        setError(err.message || 'Failed to issue book.');
+      }
+    });
 
+    returnBtn.addEventListener('click', async () => {
+      const id = parseInt(bookIdAction.value);
+      if (!id) return setError('Enter a valid Book ID for return.');
+      try {
+        setError('');
+        setMessage('Returning book...');
+        const res = await fetch(`${API_BASE}/books/${id}/return`, { method: 'POST' });
+        if (!res.ok) throw new Error('Failed to return book.');
+        const data = await res.json();
+        currentBooks = data;
+        renderLinkedList(data);
+        setMessage(`Return operation performed for ID ${id}.`);
+      } catch (err) {
+        console.error(err);
+        setError(err.message || 'Failed to return book.');
+      }
+    });
+
+    deleteBtn.addEventListener('click', async () => {
+      const id = parseInt(bookIdAction.value);
+      if (!id) return setError('Enter a valid Book ID for delete.');
+      try {
+        setError('');
+        setMessage('Deleting book...');
+        const res = await fetch(`${API_BASE}/books/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed to delete book.');
+        const data = await res.json();
+        currentBooks = data;
+        renderLinkedList(data);
+        setMessage(`Delete operation performed for ID ${id}.`);
+      } catch (err) {
+        console.error(err);
+        setError(err.message || 'Failed to delete book.');
+      }
+    });
+
+    highlightBtn.addEventListener('click', () => {
+      const id = parseInt(bookIdAction.value);
+      highlightBookById(id);
+    });
+
+    refreshBtn.addEventListener('click', loadBooks);
+
+    // On page load -> load list from backend
+    window.addEventListener('DOMContentLoaded', loadBooks);
+  </script>
 </body>
 </html>
