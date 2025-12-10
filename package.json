@@ -20,6 +20,7 @@
   "homepage": "https://github.com/yajnesh26/library-book-tracking-system#readme",
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "mongodb": "^7.0.0"
   }
 }
