@@ -1,0 +1,95 @@
+<!-- return.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Library Tracker – Return Book</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="navbar">
+      <div class="nav-left">
+        <div class="nav-logo">L</div>
+        <div>
+          <div class="nav-title">Library Book Tracker</div>
+          <div class="nav-subtitle">Linked List backend in C · MongoDB · Node.js</div>
+        </div>
+      </div>
+      <nav class="nav-links">
+        <a href="index.html" class="nav-link">Dashboard</a>
+        <a href="add.html" class="nav-link">Add Book</a>
+        <a href="issue.html" class="nav-link">Issue</a>
+        <a href="return.html" class="nav-link active">Return</a>
+        <a href="delete.html" class="nav-link">Delete</a>
+      </nav>
+    </header>
+
+    <main>
+      <div class="page-header">
+        <div class="page-title">Return Book</div>
+        <div class="page-subtitle">
+          Increase the available count for a book using the same C linked list backend.
+        </div>
+      </div>
+
+      <section class="card" style="max-width: 360px;">
+        <div class="form-group">
+          <label for="returnId">Book ID to return</label>
+          <input type="number" id="returnId" />
+        </div>
+        <button class="btn" id="returnBtn" type="button">Return Book</button>
+
+        <div id="msg" class="status-message success"></div>
+        <div id="err" class="status-message error"></div>
+
+        <p class="small-muted" style="margin-top:10px;">
+          Use the dashboard to verify that the linked list node's available count has changed.
+        </p>
+      </section>
+    </main>
+  </div>
+
+  <script>
+  const API_BASE = "http://localhost:3000/api";
+  const returnId = document.getElementById("returnId");
+  const returnBtn = document.getElementById("returnBtn");
+  const msg = document.getElementById("msg");
+  const err = document.getElementById("err");
+
+  function setMsg(t) { msg.textContent = t || ""; }
+  function setErr(t) { err.textContent = t || ""; }
+
+  returnBtn.addEventListener("click", async (event) => {
+    event.preventDefault();    // ✅ avoid any weird default
+    setMsg("");
+    setErr("");
+
+    const id = parseInt(returnId.value);
+    if (!id) {
+      setErr("Enter a valid Book ID.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/books/${id}/return`, { method: "POST" });
+      if (!res.ok) throw new Error("Failed to return book.");
+
+      const updated = await res.json();
+      const book = Array.isArray(updated) ? updated.find(b => b.id === id) : null;
+
+      if (!book) {
+        setErr(`Book with ID ${id} not found.`);
+        return;
+      }
+
+      setMsg(`Return operation performed for ID ${id}.`);
+    } catch (e2) {
+      console.error(e2);
+      setErr(e2.message || "Error returning book.");
+    }
+  });
+</script>
+
+</body>
+</html>

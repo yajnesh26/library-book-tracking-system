@@ -1,0 +1,131 @@
+<!-- add.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Library Tracker – Add Book</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="navbar">
+      <div class="nav-left">
+        <div class="nav-logo">L</div>
+        <div>
+          <div class="nav-title">Library Book Tracker</div>
+          <div class="nav-subtitle">Linked List backend in C · MongoDB · Node.js</div>
+        </div>
+      </div>
+      <nav class="nav-links">
+        <a href="index.html" class="nav-link">Dashboard</a>
+        <a href="add.html" class="nav-link active">Add Book</a>
+        <a href="issue.html" class="nav-link">Issue</a>
+        <a href="return.html" class="nav-link">Return</a>
+        <a href="delete.html" class="nav-link">Delete</a>
+      </nav>
+    </header>
+
+    <main>
+      <div class="page-header">
+        <div class="page-title">Add New Book</div>
+        <div class="page-subtitle">
+          Create a new node in the linked list and persist it via the C backend and MongoDB.
+        </div>
+      </div>
+
+      <section class="card" style="max-width: 420px;">
+        <form id="addForm">
+          <div class="form-group">
+            <label for="addId">Book ID</label>
+            <input type="number" id="addId" required />
+          </div>
+          <div class="form-group">
+            <label for="addTitle">Title</label>
+            <input type="text" id="addTitle" required />
+          </div>
+          <div class="form-group">
+            <label for="addAuthor">Author</label>
+            <input type="text" id="addAuthor" required />
+          </div>
+          <div class="form-group">
+            <label for="addCategory">Category</label>
+            <input type="text" id="addCategory" required />
+          </div>
+          <div class="form-group">
+            <label for="addTotal">Total Copies</label>
+            <input type="number" id="addTotal" required />
+          </div>
+          <button class="btn" type="submit">Add Book</button>
+        </form>
+
+        <div id="msg" class="status-message success"></div>
+        <div id="err" class="status-message error"></div>
+
+        <p class="small-muted" style="margin-top:10px;">
+          After adding, you can go back to the Dashboard to see how the linked list structure changes.
+        </p>
+      </section>
+    </main>
+  </div>
+
+  <script>
+  const API_BASE = "http://localhost:3000/api";
+  const form = document.getElementById("addForm");
+  const msg = document.getElementById("msg");
+  const err = document.getElementById("err");
+
+  function setMsg(t) { msg.textContent = t || ""; }
+  function setErr(t) { err.textContent = t || ""; }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();          // ✅ stop any page reload
+    // clear previous messages ONLY when starting a new attempt
+    setMsg("");
+    setErr("");
+
+    const idVal = parseInt(document.getElementById("addId").value);
+    const titleVal = document.getElementById("addTitle").value.trim();
+    const authorVal = document.getElementById("addAuthor").value.trim();
+    const categoryVal = document.getElementById("addCategory").value.trim();
+    const totalVal = parseInt(document.getElementById("addTotal").value);
+
+    const body = {
+      id: idVal,
+      title: titleVal,
+      author: authorVal,
+      category: categoryVal,
+      totalCopies: totalVal,
+    };
+
+    if (!body.id || !body.title || !body.author || !body.category || !body.totalCopies) {
+      return setErr("Fill all fields with valid values.");
+    }
+
+    try {
+      // ❌ no "Adding book..." temporary msg – just final status
+      const res = await fetch(`${API_BASE}/books`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to add book.");
+      }
+
+      await res.json(); // ignore contents; we just want success
+
+      setMsg("Book added successfully.");
+      // leave message visible, just reset the form
+      form.reset();
+    } catch (e2) {
+      console.error(e2);
+      setErr(e2.message || "Error adding book.");
+      // ❌ do NOT clear error again – it will stay
+    }
+  });
+</script>
+
+</body>
+</html>

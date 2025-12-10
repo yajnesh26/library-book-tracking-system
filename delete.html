@@ -1,0 +1,99 @@
+<!-- delete.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Library Tracker – Delete Book</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="navbar">
+      <div class="nav-left">
+        <div class="nav-logo">L</div>
+        <div>
+          <div class="nav-title">Library Book Tracker</div>
+          <div class="nav-subtitle">Linked List backend in C · MongoDB · Node.js</div>
+        </div>
+      </div>
+      <nav class="nav-links">
+        <a href="index.html" class="nav-link">Dashboard</a>
+        <a href="add.html" class="nav-link">Add Book</a>
+        <a href="issue.html" class="nav-link">Issue</a>
+        <a href="return.html" class="nav-link">Return</a>
+        <a href="delete.html" class="nav-link active">Delete</a>
+      </nav>
+    </header>
+
+    <main>
+      <div class="page-header">
+        <div class="page-title">Delete Book</div>
+        <div class="page-subtitle">
+          Remove a node from the linked list (and from MongoDB / storage) via the backend.
+        </div>
+      </div>
+
+      <section class="card" style="max-width: 360px;">
+        <div class="form-group">
+          <label for="deleteId">Book ID to delete</label>
+          <input type="number" id="deleteId" />
+        </div>
+        <button class="btn danger" id="deleteBtn" type="button">Delete Book</button>
+
+        <div id="msg" class="status-message success"></div>
+        <div id="err" class="status-message error"></div>
+
+        <p class="small-muted" style="margin-top:10px;">
+          Deleting a book will remove its node from the linked list. This operation is irreversible.
+        </p>
+      </section>
+    </main>
+  </div>
+
+  <script>
+  const API_BASE = "http://localhost:3000/api";
+  const deleteId = document.getElementById("deleteId");
+  const deleteBtn = document.getElementById("deleteBtn");
+  const msg = document.getElementById("msg");
+  const err = document.getElementById("err");
+
+  function setMsg(t) { msg.textContent = t || ""; }
+  function setErr(t) { err.textContent = t || ""; }
+
+  deleteBtn.addEventListener("click", async (event) => {
+    event.preventDefault();    // ✅ avoid any accidental navigation
+    setMsg("");
+    setErr("");
+
+    const id = parseInt(deleteId.value);
+    if (!id) {
+      setErr("Enter a valid Book ID.");
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete book with ID ${id}?`)) {
+      // user cancelled -> leave messages as-is
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/books/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete book.");
+
+      const updated = await res.json();
+      const stillThere = Array.isArray(updated) ? updated.find(b => b.id === id) : null;
+
+      if (stillThere) {
+        setErr("Book still present after delete. Please check backend logic.");
+        return;
+      }
+
+      setMsg(`Book with ID ${id} deleted (if it existed).`);
+    } catch (e2) {
+      console.error(e2);
+      setErr(e2.message || "Error deleting book.");
+    }
+  });
+</script>
+</body>
+</html>

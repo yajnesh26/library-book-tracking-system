@@ -2,514 +2,220 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Library Book Linked List Visualization</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: #e5e7eb;
-      margin: 0;
-      padding: 20px;
-    }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-
-    .description {
-      text-align: center;
-      font-size: 14px;
-      margin-bottom: 20px;
-      color: #9ca3af;
-    }
-
-    .layout {
-      display: grid;
-      grid-template-columns: 280px 1fr;
-      gap: 16px;
-    }
-
-    @media (max-width: 800px) {
-      .layout {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .panel {
-      background: #020617;
-      border-radius: 12px;
-      padding: 16px;
-      border: 1px solid #1f2937;
-    }
-
-    .panel-title {
-      font-size: 16px;
-      margin-bottom: 10px;
-      font-weight: bold;
-    }
-
-    .form-group {
-      margin-bottom: 10px;
-    }
-
-    label {
-      display: block;
-      font-size: 13px;
-      margin-bottom: 3px;
-    }
-
-    input[type="number"],
-    input[type="text"] {
-      width: 100%;
-      padding: 6px 8px;
-      border-radius: 6px;
-      border: 1px solid #4b5563;
-      background: #020617;
-      color: #e5e7eb;
-      font-size: 13px;
-      box-sizing: border-box;
-    }
-
-    .btn {
-      display: inline-block;
-      padding: 6px 10px;
-      margin-top: 4px;
-      border-radius: 6px;
-      border: 1px solid #4b5563;
-      background: #111827;
-      color: #e5e7eb;
-      font-size: 13px;
-      cursor: pointer;
-    }
-
-    .btn:hover {
-      background: #1f2937;
-    }
-
-    .btn-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 4px;
-    }
-
-    .visualizer-container {
-      border-radius: 12px;
-      padding: 16px;
-      min-height: 150px;
-      border: 1px solid #1f2937;
-      overflow-x: auto;
-      white-space: nowrap;
-      background: #020617;
-    }
-
-    .list-info {
-      font-size: 13px;
-      margin-bottom: 8px;
-      color: #9ca3af;
-    }
-
-    .nodes-wrapper {
-      display: inline-flex;
-      align-items: center;
-    }
-
-    .book-node {
-      background: #1f2937;
-      border-radius: 10px;
-      padding: 10px 12px;
-      min-width: 160px;
-      max-width: 200px;
-      margin: 5px 0;
-      box-shadow: 0 0 0 1px #374151;
-      font-size: 12px;
-      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-    }
-
-    .book-node-header {
-      font-weight: bold;
-      margin-bottom: 4px;
-      color: #facc15;
-    }
-
-    .book-field {
-      margin: 2px 0;
-    }
-
-    .arrow {
-      font-size: 20px;
-      margin: 0 8px;
-      color: #38bdf8;
-    }
-
-    .null-node {
-      font-style: italic;
-      color: #f97316;
-      margin-left: 8px;
-      font-size: 14px;
-    }
-
-    .error-message {
-      color: #f97316;
-      font-size: 13px;
-      margin-top: 8px;
-    }
-
-    .success-message {
-      color: #22c55e;
-      font-size: 13px;
-      margin-top: 4px;
-    }
-
-    .highlight {
-      box-shadow: 0 0 0 2px #22c55e, 0 0 12px rgba(34, 197, 94, 0.7);
-      transform: scale(1.03);
-    }
-
-    .out-of-stock {
-      background: #450a0a;
-      box-shadow: 0 0 0 1px #b91c1c;
-    }
-
-    .legend {
-      font-size: 12px;
-      margin-top: 8px;
-      color: #9ca3af;
-    }
-
-    .legend span {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      margin: 0 8px 4px 0;
-    }
-
-    .legend-box {
-      width: 12px;
-      height: 12px;
-      border-radius: 3px;
-      display: inline-block;
-    }
-  </style>
+  <title>Library Tracker – Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>Library Book Linked List Visualization</h1>
-  <p class="description">
-    All operations are handled by a C backend (linked list) via a Node.js server.
-  </p>
-
-  <div class="layout">
-    <!-- LEFT: Controls -->
-    <div class="panel">
-      <div class="panel-title">Operations</div>
-
-      <!-- Add book form -->
-      <form id="addForm">
-        <div class="form-group">
-          <label for="addId">Book ID</label>
-          <input type="number" id="addId" required />
+  <div class="app-shell">
+    <header class="navbar">
+      <div class="nav-left">
+        <div class="nav-logo">L</div>
+        <div>
+          <div class="nav-title">Library Book Tracker</div>
+          <div class="nav-subtitle">Linked List backend in C · MongoDB · Node.js</div>
         </div>
-        <div class="form-group">
-          <label for="addTitle">Title</label>
-          <input type="text" id="addTitle" required />
-        </div>
-        <div class="form-group">
-          <label for="addAuthor">Author</label>
-          <input type="text" id="addAuthor" required />
-        </div>
-        <div class="form-group">
-          <label for="addCategory">Category</label>
-          <input type="text" id="addCategory" required />
-        </div>
-        <div class="form-group">
-          <label for="addTotal">Total Copies</label>
-          <input type="number" id="addTotal" required />
-        </div>
-        <button class="btn" type="submit">Add Book</button>
-      </form>
-
-      <hr style="border-color:#1f2937; margin: 14px 0;" />
-
-      <!-- Issue / Return / Delete / Highlight -->
-      <div class="form-group">
-        <label for="bookIdAction">Book ID for issue / return / delete / highlight</label>
-        <input type="number" id="bookIdAction" />
       </div>
-      <div class="btn-row">
-        <button class="btn" id="issueBtn" type="button">Issue</button>
-        <button class="btn" id="returnBtn" type="button">Return</button>
-        <button class="btn" id="deleteBtn" type="button">Delete</button>
-        <button class="btn" id="highlightBtn" type="button">Highlight</button>
-        <button class="btn" id="refreshBtn" type="button">Refresh</button>
+      <nav class="nav-links">
+        <a href="index.html" class="nav-link active">Dashboard</a>
+        <a href="add.html" class="nav-link">Add Book</a>
+        <a href="issue.html" class="nav-link">Issue</a>
+        <a href="return.html" class="nav-link">Return</a>
+        <a href="delete.html" class="nav-link">Delete</a>
+      </nav>
+    </header>
+
+    <main>
+      <div class="page-header">
+        <div class="page-title">Dashboard</div>
+        <div class="page-subtitle">
+          Visual view of the current linked list of books managed by the C backend.
+        </div>
       </div>
 
-      <div id="message" class="success-message"></div>
-      <div id="error" class="error-message"></div>
-    </div>
+      <div class="layout-two-col">
+        <section class="card">
+          <h3 style="margin:0 0 8px;font-size:15px;">Highlight & Refresh</h3>
+          <p class="small-muted">
+            Use this panel to quickly jump to a particular node and reload the list from the backend.
+          </p>
 
-    <!-- RIGHT: Visualization -->
-    <div>
-      <div class="visualizer-container">
-        <div class="list-info" id="listInfo">Loading list from server...</div>
-        <div class="nodes-wrapper" id="nodesWrapper"></div>
-      </div>
+          <div class="form-group">
+            <label for="highlightId">Book ID to highlight</label>
+            <input type="number" id="highlightId" />
+          </div>
+          <div class="btn-row">
+            <button class="btn" id="highlightBtn" type="button">Highlight</button>
+            <button class="btn secondary" id="refreshBtn" type="button">Refresh List</button>
+          </div>
 
-      <div class="legend">
-        <span>
-          <span class="legend-box" style="background:#1f2937; box-shadow:0 0 0 1px #374151;"></span>
-          Normal book
-        </span>
-        <span>
-          <span class="legend-box" style="background:#450a0a; box-shadow:0 0 0 1px #b91c1c;"></span>
-          Out of stock (0 available)
-        </span>
-        <span>
-          <span class="legend-box" style="background:#1f2937; box-shadow:0 0 0 2px #22c55e;"></span>
-          Highlighted
-        </span>
+          <div id="dashMessage" class="status-message success"></div>
+          <div id="dashError" class="status-message error"></div>
+
+          <p class="small-muted" style="margin-top:10px;">
+            Tip: Use the operations from the other pages and then refresh here to see how the linked list changes.
+          </p>
+        </section>
+
+        <section>
+          <div class="card">
+            <div class="visualizer-container">
+              <div class="list-info" id="listInfo">Loading list from server...</div>
+              <div class="nodes-wrapper" id="nodesWrapper"></div>
+            </div>
+            <div class="legend">
+              <span>
+                <span class="legend-box" style="background:#ffffff;border:1px solid #e5e7eb;"></span>
+                Normal book
+              </span>
+              <span>
+                <span class="legend-box" style="background:#fef2f2;border:1px solid rgba(185,28,28,0.6);"></span>
+                Out of stock
+              </span>
+              <span>
+                <span class="legend-box" style="background:#ffffff;border:1px solid rgba(37,99,235,0.8);"></span>
+                Highlighted
+              </span>
+            </div>
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   </div>
 
   <script>
-    const API_BASE = 'http://localhost:3000/api';
+    const API_BASE = "http://localhost:3000/api";
 
-    const nodesWrapper = document.getElementById('nodesWrapper');
-    const listInfo = document.getElementById('listInfo');
-    const errorDiv = document.getElementById('error');
-    const messageDiv = document.getElementById('message');
+    const nodesWrapper = document.getElementById("nodesWrapper");
+    const listInfo = document.getElementById("listInfo");
+    const dashMsg = document.getElementById("dashMessage");
+    const dashErr = document.getElementById("dashError");
+    const highlightInput = document.getElementById("highlightId");
+    const highlightBtn = document.getElementById("highlightBtn");
+    const refreshBtn = document.getElementById("refreshBtn");
 
-    const addForm = document.getElementById('addForm');
-    const addId = document.getElementById('addId');
-    const addTitle = document.getElementById('addTitle');
-    const addAuthor = document.getElementById('addAuthor');
-    const addCategory = document.getElementById('addCategory');
-    const addTotal = document.getElementById('addTotal');
-
-    const bookIdAction = document.getElementById('bookIdAction');
-    const issueBtn = document.getElementById('issueBtn');
-    const returnBtn = document.getElementById('returnBtn');
-    const deleteBtn = document.getElementById('deleteBtn');
-    const highlightBtn = document.getElementById('highlightBtn');
-    const refreshBtn = document.getElementById('refreshBtn');
-
-    let currentBooks = [];
-
-    function setMessage(msg) {
-      messageDiv.textContent = msg || '';
+    function setMsg(msg) {
+      dashMsg.textContent = msg || "";
     }
 
-    function setError(msg) {
-      errorDiv.textContent = msg || '';
+    function setErr(msg) {
+      // ❗ This will now stay until you explicitly overwrite it
+      dashErr.textContent = msg || "";
     }
 
-    // Fetch books from server
     async function loadBooks() {
       try {
-        setError('');
-        setMessage('Fetching latest list from server...');
+        // IMPORTANT: don't auto-clear the error here,
+        // so "not found" messages stay unless user does some other action
+        setMsg("Fetching latest list from backend...");
         const res = await fetch(`${API_BASE}/books`);
         const data = await res.json();
-        currentBooks = data;
         renderLinkedList(data);
-        setMessage('List updated from backend.');
+        setMsg("List refreshed.");
       } catch (err) {
         console.error(err);
-        setError('Failed to load books from server.');
-        listInfo.textContent = 'Error loading list.';
+        setErr("Failed to load books.");
+        listInfo.textContent = "Error loading list.";
       }
     }
 
-    // Render linked list
     function renderLinkedList(books) {
-      nodesWrapper.innerHTML = '';
+      nodesWrapper.innerHTML = "";
 
       if (!books || books.length === 0) {
-        listInfo.textContent = 'List is empty. (head = NULL)';
-        const nullSpan = document.createElement('span');
-        nullSpan.className = 'null-node';
-        nullSpan.textContent = 'NULL';
+        listInfo.textContent = "List is empty. (head = NULL)";
+        const nullSpan = document.createElement("span");
+        nullSpan.className = "null-node";
+        nullSpan.textContent = "NULL";
         nodesWrapper.appendChild(nullSpan);
         return;
       }
 
-      listInfo.textContent = 'head →';
+      listInfo.textContent = "head →";
 
-      books.forEach((book, index) => {
-        const nodeDiv = document.createElement('div');
-        nodeDiv.className = 'book-node';
-        if (book.available === 0) nodeDiv.classList.add('out-of-stock');
+      books.forEach((book, idx) => {
+        const nodeDiv = document.createElement("div");
+        nodeDiv.className = "book-node";
+        if (book.available === 0) nodeDiv.classList.add("out-of-stock");
         nodeDiv.dataset.bookId = book.id;
 
-        const header = document.createElement('div');
-        header.className = 'book-node-header';
+        const header = document.createElement("div");
+        header.className = "book-node-header";
         header.textContent = `ID: ${book.id}`;
         nodeDiv.appendChild(header);
 
-        const titleDiv = document.createElement('div');
-        titleDiv.className = 'book-field';
-        titleDiv.textContent = `Title: ${book.title}`;
-        nodeDiv.appendChild(titleDiv);
+        const tDiv = document.createElement("div");
+        tDiv.className = "book-field";
+        tDiv.textContent = `Title: ${book.title}`;
+        nodeDiv.appendChild(tDiv);
 
-        const authorDiv = document.createElement('div');
-        authorDiv.className = 'book-field';
-        authorDiv.textContent = `Author: ${book.author}`;
-        nodeDiv.appendChild(authorDiv);
+        const aDiv = document.createElement("div");
+        aDiv.className = "book-field";
+        aDiv.textContent = `Author: ${book.author}`;
+        nodeDiv.appendChild(aDiv);
 
-        const categoryDiv = document.createElement('div');
-        categoryDiv.className = 'book-field';
-        categoryDiv.textContent = `Category: ${book.category}`;
-        nodeDiv.appendChild(categoryDiv);
+        const cDiv = document.createElement("div");
+        cDiv.className = "book-field";
+        cDiv.textContent = `Category: ${book.category}`;
+        nodeDiv.appendChild(cDiv);
 
-        const copiesDiv = document.createElement('div');
-        copiesDiv.className = 'book-field';
+        const copiesDiv = document.createElement("div");
+        copiesDiv.className = "book-field";
         copiesDiv.textContent = `Avail/Total: ${book.available}/${book.total}`;
         nodeDiv.appendChild(copiesDiv);
 
         nodesWrapper.appendChild(nodeDiv);
 
-        if (index !== books.length - 1) {
-          const arrowSpan = document.createElement('span');
-          arrowSpan.className = 'arrow';
-          arrowSpan.textContent = '→';
+        if (idx !== books.length - 1) {
+          const arrowSpan = document.createElement("span");
+          arrowSpan.className = "arrow";
+          arrowSpan.textContent = "→";
           nodesWrapper.appendChild(arrowSpan);
         }
       });
 
-      const nullSpan = document.createElement('span');
-      nullSpan.className = 'null-node';
-      nullSpan.textContent = '→ NULL';
+      const nullSpan = document.createElement("span");
+      nullSpan.className = "null-node";
+      nullSpan.textContent = "→ NULL";
       nodesWrapper.appendChild(nullSpan);
     }
 
-    function highlightBookById(id) {
-      const allNodes = nodesWrapper.querySelectorAll('.book-node');
-      allNodes.forEach(node => node.classList.remove('highlight'));
+    function highlightById(id) {
+      const allNodes = nodesWrapper.querySelectorAll(".book-node");
+      allNodes.forEach(n => n.classList.remove("highlight"));
 
       if (!id || isNaN(id)) {
-        setError('Enter a valid Book ID to highlight.');
+        setErr("Enter a valid Book ID.");
         return;
       }
 
       let found = false;
-      allNodes.forEach(node => {
-        if (parseInt(node.dataset.bookId) === id) {
-          node.classList.add('highlight');
-          node.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      allNodes.forEach(n => {
+        if (parseInt(n.dataset.bookId) === id) {
+          n.classList.add("highlight");
+          n.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
           found = true;
         }
       });
 
       if (!found) {
-        setError(`Book with ID ${id} not found in current list.`);
+        // ❗ This will remain until you manually overwrite/clear it
+        setErr(`Book with ID ${id} not found in current list.`);
+        // we do NOT clear setMsg here so success text stays separate
       } else {
-        setError('');
-        setMessage(`Highlighted book with ID ${id}.`);
+        // On success, clear previous error and show success message
+        setErr("");
+        setMsg(`Highlighted book with ID ${id}.`);
       }
     }
 
-    // Add book (POST /api/books)
-    addForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      try {
-        setError('');
-        setMessage('Adding book via backend...');
-
-        const body = {
-          id: parseInt(addId.value),
-          title: addTitle.value,
-          author: addAuthor.value,
-          category: addCategory.value,
-          totalCopies: parseInt(addTotal.value),
-        };
-
-        const res = await fetch(`${API_BASE}/books`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || 'Failed to add book');
-        }
-
-        const data = await res.json();
-        currentBooks = data;
-        renderLinkedList(data);
-        setMessage('Book added successfully.');
-        addForm.reset();
-      } catch (err) {
-        console.error(err);
-        setError(err.message || 'Failed to add book.');
-      }
+    highlightBtn.addEventListener("click", () => {
+      const id = parseInt(highlightInput.value);
+      highlightById(id);
     });
 
-    // Issue / Return / Delete / Highlight handlers
-    issueBtn.addEventListener('click', async () => {
-      const id = parseInt(bookIdAction.value);
-      if (!id) return setError('Enter a valid Book ID for issue.');
-      try {
-        setError('');
-        setMessage('Issuing book...');
-        const res = await fetch(`${API_BASE}/books/${id}/issue`, { method: 'POST' });
-        if (!res.ok) throw new Error('Failed to issue book.');
-        const data = await res.json();
-        currentBooks = data;
-        renderLinkedList(data);
-        setMessage(`Issue operation performed for ID ${id}.`);
-      } catch (err) {
-        console.error(err);
-        setError(err.message || 'Failed to issue book.');
-      }
-    });
+    refreshBtn.addEventListener("click", loadBooks);
 
-    returnBtn.addEventListener('click', async () => {
-      const id = parseInt(bookIdAction.value);
-      if (!id) return setError('Enter a valid Book ID for return.');
-      try {
-        setError('');
-        setMessage('Returning book...');
-        const res = await fetch(`${API_BASE}/books/${id}/return`, { method: 'POST' });
-        if (!res.ok) throw new Error('Failed to return book.');
-        const data = await res.json();
-        currentBooks = data;
-        renderLinkedList(data);
-        setMessage(`Return operation performed for ID ${id}.`);
-      } catch (err) {
-        console.error(err);
-        setError(err.message || 'Failed to return book.');
-      }
-    });
-
-    deleteBtn.addEventListener('click', async () => {
-      const id = parseInt(bookIdAction.value);
-      if (!id) return setError('Enter a valid Book ID for delete.');
-      try {
-        setError('');
-        setMessage('Deleting book...');
-        const res = await fetch(`${API_BASE}/books/${id}`, { method: 'DELETE' });
-        if (!res.ok) throw new Error('Failed to delete book.');
-        const data = await res.json();
-        currentBooks = data;
-        renderLinkedList(data);
-        setMessage(`Delete operation performed for ID ${id}.`);
-      } catch (err) {
-        console.error(err);
-        setError(err.message || 'Failed to delete book.');
-      }
-    });
-
-    highlightBtn.addEventListener('click', () => {
-      const id = parseInt(bookIdAction.value);
-      highlightBookById(id);
-    });
-
-    refreshBtn.addEventListener('click', loadBooks);
-
-    // On page load -> load list from backend
-    window.addEventListener('DOMContentLoaded', loadBooks);
+    window.addEventListener("DOMContentLoaded", loadBooks);
   </script>
 </body>
 </html>
