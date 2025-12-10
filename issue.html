@@ -22,6 +22,7 @@
         <a href="issue.html" class="nav-link active">Issue</a>
         <a href="return.html" class="nav-link">Return</a>
         <a href="delete.html" class="nav-link">Delete</a>
+        <a href="borrowers.html" class="nav-link">Borrowers</a>
       </nav>
     </header>
 
@@ -29,73 +30,87 @@
       <div class="page-header">
         <div class="page-title">Issue Book</div>
         <div class="page-subtitle">
-          Decrease the available count for a book through the C + Node backend.
+          Decrease the available count for a book and record which student it was issued to.
         </div>
       </div>
 
-      <section class="card" style="max-width: 360px;">
+      <section class="card" style="max-width: 420px;">
         <div class="form-group">
           <label for="issueId">Book ID to issue</label>
           <input type="number" id="issueId" />
         </div>
+
+        <div class="form-group">
+          <label for="studentName">Student Name</label>
+          <input type="text" id="studentName" />
+        </div>
+
+        <div class="form-group">
+          <label for="studentUsn">USN</label>
+          <input type="text" id="studentUsn" />
+        </div>
+
         <button class="btn" id="issueBtn" type="button">Issue Book</button>
 
         <div id="msg" class="status-message success"></div>
         <div id="err" class="status-message error"></div>
 
         <p class="small-muted" style="margin-top:10px;">
-          If the book is out of stock or does not exist, the backend will return an appropriate status.
+          After issuing, check the Dashboard to see the linked list update. Issued entries are also stored in MongoDB with student details.
         </p>
       </section>
     </main>
   </div>
 
   <script>
-  const API_BASE = "http://localhost:3000/api";
-  const issueId = document.getElementById("issueId");
-  const issueBtn = document.getElementById("issueBtn");
-  const msg = document.getElementById("msg");
-  const err = document.getElementById("err");
+    const API_BASE = "http://localhost:3000/api";
+    const issueIdInput = document.getElementById("issueId");
+    const studentNameInput = document.getElementById("studentName");
+    const studentUsnInput = document.getElementById("studentUsn");
+    const issueBtn = document.getElementById("issueBtn");
+    const msg = document.getElementById("msg");
+    const err = document.getElementById("err");
 
-  function setMsg(t) { msg.textContent = t || ""; }
-  function setErr(t) { err.textContent = t || ""; }
+    function setMsg(t) { msg.textContent = t || ""; }
+    function setErr(t) { err.textContent = t || ""; }
 
-  issueBtn.addEventListener("click", async (event) => {
-    event.preventDefault();     // ✅ extra safety: no default browser action
-    // clear previous messages ONLY when starting a new click
-    setMsg("");
+    issueBtn.addEventListener("click", async () => {
+  setMsg("");
+  setErr("");
+
+  const id = parseInt(issueIdInput.value);
+  const studentName = studentNameInput.value.trim();
+  const usn = studentUsnInput.value.trim();
+
+  if (!id) return setErr("Enter a valid Book ID.");
+  if (!studentName || !usn) return setErr("Enter both student name and USN.");
+
+  try {
+    setMsg("Issuing book...");
+    const res = await fetch(`${API_BASE}/books/${id}/issue`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ studentName, usn }),
+    });
+
+    const payload = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      // Show exact server-side error (book not found / out of stock / etc.)
+      setMsg("");
+      return setErr(payload.error || "Failed to issue book.");
+    }
+
+    // Success
     setErr("");
+    setMsg(`Issued book ID ${id} to ${studentName} (USN: ${usn}).`);
+  } catch (e) {
+    console.error(e);
+    setMsg("");
+    setErr(e.message || "Error issuing book.");
+  }
+});
 
-    const id = parseInt(issueId.value);
-    if (!id) {
-      setErr("Enter a valid Book ID.");
-      return;
-    }
-
-    try {
-      // ❌ no "Issuing book..." temporary text
-      const res = await fetch(`${API_BASE}/books/${id}/issue`, { method: "POST" });
-      if (!res.ok) throw new Error("Failed to issue book.");
-
-      const updated = await res.json();
-
-      // check whether book exists in updated list
-      const book = Array.isArray(updated) ? updated.find(b => b.id === id) : null;
-
-      if (!book) {
-        // ✅ this error will stay until next click
-        setErr(`Book with ID ${id} not found.`);
-        return;
-      }
-
-      // we don't know from JSON if out-of-stock, but at least show success
-      setMsg(`Issue operation performed for ID ${id}.`);
-    } catch (e2) {
-      console.error(e2);
-      setErr(e2.message || "Error issuing book.");
-    }
-  });
-</script>
-
+  </script>
 </body>
 </html>

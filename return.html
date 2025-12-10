@@ -22,6 +22,7 @@
         <a href="issue.html" class="nav-link">Issue</a>
         <a href="return.html" class="nav-link active">Return</a>
         <a href="delete.html" class="nav-link">Delete</a>
+        <a href="borrowers.html" class="nav-link">Borrowers</a>
       </nav>
     </header>
 
@@ -29,67 +30,80 @@
       <div class="page-header">
         <div class="page-title">Return Book</div>
         <div class="page-subtitle">
-          Increase the available count for a book using the same C linked list backend.
+          Return a book for a specific student (Book ID + USN). This updates the C linked list and the issues log.
         </div>
       </div>
 
-      <section class="card" style="max-width: 360px;">
+      <section class="card" style="max-width: 420px;">
         <div class="form-group">
           <label for="returnId">Book ID to return</label>
           <input type="number" id="returnId" />
         </div>
+
+        <div class="form-group">
+          <label for="returnUsn">Student USN</label>
+          <input type="text" id="returnUsn" />
+        </div>
+
         <button class="btn" id="returnBtn" type="button">Return Book</button>
 
         <div id="msg" class="status-message success"></div>
         <div id="err" class="status-message error"></div>
 
         <p class="small-muted" style="margin-top:10px;">
-          Use the dashboard to verify that the linked list node's available count has changed.
+          Only a student who previously issued this book (matching USN) can return it.
+          Check the Dashboard after returning to verify the updated linked list.
         </p>
       </section>
     </main>
   </div>
 
   <script>
-  const API_BASE = "http://localhost:3000/api";
-  const returnId = document.getElementById("returnId");
-  const returnBtn = document.getElementById("returnBtn");
-  const msg = document.getElementById("msg");
-  const err = document.getElementById("err");
+    const API_BASE = "http://localhost:3000/api";
+    const returnId = document.getElementById("returnId");
+    const returnUsn = document.getElementById("returnUsn");
+    const returnBtn = document.getElementById("returnBtn");
+    const msg = document.getElementById("msg");
+    const err = document.getElementById("err");
 
-  function setMsg(t) { msg.textContent = t || ""; }
-  function setErr(t) { err.textContent = t || ""; }
+    function setMsg(t) { msg.textContent = t || ""; }
+    function setErr(t) { err.textContent = t || ""; }
 
-  returnBtn.addEventListener("click", async (event) => {
-    event.preventDefault();    // ✅ avoid any weird default
-    setMsg("");
-    setErr("");
+    returnBtn.addEventListener("click", async () => {
+      setMsg("");
+      setErr("");
 
-    const id = parseInt(returnId.value);
-    if (!id) {
-      setErr("Enter a valid Book ID.");
-      return;
-    }
+      const id = parseInt(returnId.value);
+      const usn = returnUsn.value.trim();
 
-    try {
-      const res = await fetch(`${API_BASE}/books/${id}/return`, { method: "POST" });
-      if (!res.ok) throw new Error("Failed to return book.");
+      if (!id) return setErr("Enter a valid Book ID.");
+      if (!usn) return setErr("Enter the USN of the student returning the book.");
 
-      const updated = await res.json();
-      const book = Array.isArray(updated) ? updated.find(b => b.id === id) : null;
+      try {
+        setMsg("Processing return...");
 
-      if (!book) {
-        setErr(`Book with ID ${id} not found.`);
-        return;
+        const res = await fetch(`${API_BASE}/books/${id}/return`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ usn }),
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          // backend sends { error: "..." } on failure
+          setMsg("");
+          return setErr(data.error || "Failed to return book.");
+        }
+
+        setMsg(`Successfully returned book ID ${id} for USN ${usn}.`);
+        setErr("");
+      } catch (e) {
+        console.error(e);
+        setMsg("");
+        setErr(e.message || "Error returning book.");
       }
-
-      setMsg(`Return operation performed for ID ${id}.`);
-    } catch (e2) {
-      console.error(e2);
-      setErr(e2.message || "Error returning book.");
-    }
-  });
-</script>
-
+    });
+  </script>
 </body>
 </html>
