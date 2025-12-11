@@ -43,7 +43,7 @@ a {
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-soft);
-  padding: 10px 16px;
+  padding: 19px 9px;
   display: flex;
   align-items: center;
   justify-content: space-between;
