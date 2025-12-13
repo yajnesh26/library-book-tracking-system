@@ -1,0 +1,129 @@
+<!-- delete.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Library Tracker – Delete Book</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="navbar">
+      <div class="nav-left">
+        <div class="nav-logo">
+          <img src="../images/logo.png" alt="Logo">
+        </div>
+        <div>
+          <div class="nav-title">Library Book Tracker</div>
+        </div>
+      </div>
+      <nav class="nav-links">
+        <a href="index.html" class="nav-link">Dashboard</a>
+        <a href="add.html" class="nav-link">Add Book</a>
+        <a href="issue.html" class="nav-link">Issue</a>
+        <a href="return.html" class="nav-link">Return</a>
+        <a href="delete.html" class="nav-link active">Delete</a>
+        <a href="borrowers.html" class="nav-link">Borrowers</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="card add-card">
+        <div class="page-header" style="border-bottom: 2px solid #050505;">Delete a book
+      </div>
+        <div class="form-group">
+          <label for="deleteId">Book ID to delete</label>
+          <input type="number" id="deleteId" min="0" step="1" inputmode="numeric"/>
+        </div>
+        <button class="btn danger" id="deleteBtn" type="button">Delete Book</button>
+
+        <div id="msg" class="status-message success"></div>
+        <div id="err" class="status-message error"></div>
+
+      </section>
+    </main>
+  </div>
+
+  <script>
+  const API_BASE = "http://localhost:3000/api";
+  const deleteId = document.getElementById("deleteId");
+  const deleteBtn = document.getElementById("deleteBtn");
+  const msg = document.getElementById("msg");
+  const err = document.getElementById("err");
+
+  function setMsg(t) { msg.textContent = t || ""; }
+  function setErr(t) { err.textContent = t || ""; }
+
+  deleteBtn.addEventListener("click", async (event) => {
+    event.preventDefault();    // ✅ avoid any accidental navigation
+    setMsg("");
+    setErr("");
+
+    const id = parseInt(deleteId.value);
+    if (!id) {
+      setErr("Enter a valid Book ID.");
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete book with ID ${id}?`)) {
+      // user cancelled -> leave messages as-is
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/books/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete book.");
+
+      const updated = await res.json();
+      const stillThere = Array.isArray(updated) ? updated.find(b => b.id === id) : null;
+
+      if (stillThere) {
+        setErr("Book still present after delete. Please check backend logic.");
+        return;
+      }
+
+      setMsg(`Book with ID ${id} deleted (if it existed).`);
+    } catch (e2) {
+      console.error(e2);
+      setErr(e2.message || "Error deleting book.");
+    }
+  });
+  // Reusable sanitizer for all number inputs
+function sanitizeNumberInput(input) {
+  input.addEventListener("keydown", (ev) => {
+    const controlKeys = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab", "Home", "End"];
+    if (controlKeys.includes(ev.key) || ev.ctrlKey || ev.metaKey) return;
+
+    // Allow digits only
+    if (ev.key >= "0" && ev.key <= "9") return;
+
+    // Block everything else: e, -, +, ., letters, etc.
+    ev.preventDefault();
+  });
+
+  input.addEventListener("paste", (ev) => {
+    let text = (ev.clipboardData || window.clipboardData).getData("text");
+    if (!/^\d+$/.test(text)) {
+      ev.preventDefault();
+      text = text.replace(/\D+/g, "");
+    }
+    if (text) {
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      const old = input.value;
+      input.value = old.slice(0, start) + text + old.slice(end);
+      input.setSelectionRange(start + text.length, start + text.length);
+    }
+  });
+
+  input.addEventListener("input", () => {
+    input.value = input.value.replace(/\D+/g, "");  // remove any non-digit
+  });
+}
+
+// Apply to specific inputs
+sanitizeNumberInput(document.getElementById("deleteId"));
+
+</script>
+</body>
+</html>

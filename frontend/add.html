@@ -1,0 +1,166 @@
+<!-- add.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Library Tracker – Add Book</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="navbar">
+      <div class="nav-left">
+        <div class="nav-logo">
+          <img src="../images/logo.png" alt="Logo">
+        </div>
+        <div>
+          <div class="nav-title">Library Book Tracker</div>
+        </div>
+      </div>
+      <nav class="nav-links">
+        <a href="index.html" class="nav-link">Dashboard</a>
+        <a href="add.html" class="nav-link active">Add Book</a>
+        <a href="issue.html" class="nav-link">Issue</a>
+        <a href="return.html" class="nav-link">Return</a>
+        <a href="delete.html" class="nav-link">Delete</a>
+        <a href="borrowers.html" class="nav-link">Borrowers</a>
+      </nav>
+    </header>
+
+    <main>
+      
+      <section class="card add-card">
+        <div class="page-header" style="border-bottom: 2px solid #050505;">Add a new book
+      </div>
+        <form id="addForm">
+          <div class="form-group">
+            <label for="addId">Book ID</label>
+            <input type="number" id="addId" min="0" step="1" inputmode="numeric" required />
+          </div>
+          <div class="form-group">
+            <label for="addTitle">Title</label>
+            <input type="text" id="addTitle" required />
+          </div>
+          <div class="form-group">
+            <label for="addAuthor">Author</label>
+            <input type="text" id="addAuthor" required />
+          </div>
+          <div class="form-group">
+            <label for="addCategory">Category</label>
+            <input type="text" id="addCategory" required />
+          </div>
+          <div class="form-group">
+            <label for="addTotal">Total Copies</label>
+            <input type="number" id="addTotal" min="0" step="1" inputmode="numeric" required />
+          </div>
+          <div class="btn-wrapper">
+          <button class="btn" type="submit">Add Book</button>
+          </div>
+        </form>
+
+        <div id="msg" class="status-message success"></div>
+        <div id="err" class="status-message error"></div>
+
+      </section>
+    </main>
+  </div>
+
+  <script>
+  const API_BASE = "http://localhost:3000/api";
+  const form = document.getElementById("addForm");
+  const msg = document.getElementById("msg");
+  const err = document.getElementById("err");
+
+  function setMsg(t) { msg.textContent = t || ""; }
+  function setErr(t) { err.textContent = t || ""; }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();          // ✅ stop any page reload
+    // clear previous messages ONLY when starting a new attempt
+    setMsg("");
+    setErr("");
+
+    const idVal = parseInt(document.getElementById("addId").value);
+    const titleVal = document.getElementById("addTitle").value.trim();
+    const authorVal = document.getElementById("addAuthor").value.trim();
+    const categoryVal = document.getElementById("addCategory").value.trim();
+    const totalVal = parseInt(document.getElementById("addTotal").value);
+
+    const body = {
+      id: idVal,
+      title: titleVal,
+      author: authorVal,
+      category: categoryVal,
+      totalCopies: totalVal,
+    };
+
+    if (!body.id || !body.title || !body.author || !body.category || !body.totalCopies) {
+      return setErr("Fill all fields with valid values.");
+    }
+
+    try {
+      // ❌ no "Adding book..." temporary msg – just final status
+      const res = await fetch(`${API_BASE}/books`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to add book.");
+      }
+
+      await res.json(); // ignore contents; we just want success
+
+      setMsg("Book added successfully.");
+      // leave message visible, just reset the form
+      form.reset();
+    } catch (e2) {
+      console.error(e2);
+      setErr(e2.message || "Error adding book.");
+      // ❌ do NOT clear error again – it will stay
+    }
+  });
+
+  // Reusable sanitizer for all number inputs
+function sanitizeNumberInput(input) {
+  input.addEventListener("keydown", (ev) => {
+    const controlKeys = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab", "Home", "End"];
+    if (controlKeys.includes(ev.key) || ev.ctrlKey || ev.metaKey) return;
+
+    // Allow digits only
+    if (ev.key >= "0" && ev.key <= "9") return;
+
+    // Block everything else: e, -, +, ., letters, etc.
+    ev.preventDefault();
+  });
+
+  input.addEventListener("paste", (ev) => {
+    let text = (ev.clipboardData || window.clipboardData).getData("text");
+    if (!/^\d+$/.test(text)) {
+      ev.preventDefault();
+      text = text.replace(/\D+/g, "");
+    }
+    if (text) {
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      const old = input.value;
+      input.value = old.slice(0, start) + text + old.slice(end);
+      input.setSelectionRange(start + text.length, start + text.length);
+    }
+  });
+
+  input.addEventListener("input", () => {
+    input.value = input.value.replace(/\D+/g, "");  // remove any non-digit
+  });
+}
+
+// Apply to specific inputs
+sanitizeNumberInput(document.getElementById("addId"));
+sanitizeNumberInput(document.getElementById("addTotal"));
+
+</script>
+
+</body>
+</html>
